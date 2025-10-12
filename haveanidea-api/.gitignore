@@ -1,0 +1,10 @@
+# Rust
+/target
+
+# SQLite database
+*.db
+*.db-shm
+*.db-wal
+
+# Env
+.env
