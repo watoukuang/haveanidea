@@ -14,7 +14,7 @@ export default function Footer(): React.ReactElement {
                             <span className="text-base md:text-lg font-semibold">HAVE AN IDEA</span>
                         </div>
                         <div className="space-y-1.5 text-xs md:text-[13px] text-gray-600 dark:text-gray-400">
-                            <p>© {new Date().getFullYear()} watoukuang.com · All rights reserved</p>
+                            <p>© {new Date().getFullYear()} haveanidea.me · All rights reserved</p>
                         </div>
                     </div>
 
@@ -55,7 +55,7 @@ export default function Footer(): React.ReactElement {
                             <li>
                               <a
                                 className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-                                href="mailto:contact@watoukuang.com">Contact: contact@watoukuang.com</a>
+                                href="mailto:contact@watoukuang.com">Contact: contact@haveanidea.me</a>
                             </li>
                             <li>
                               <div className="flex items-center gap-3 pt-1">

@@ -77,7 +77,7 @@ export default function Header(): React.ReactElement {
     // 顶部导航菜单（来自原 Sidebar）
     const menuItems: { name: string; href: string }[] = [
         { name: 'IDEAS', href: '/' },
-        { name: 'LAUNCH', href: '/lauch' },
+        { name: 'LAUNCH', href: '/launch' },
         { name: 'ABOUT', href: '/about' },
     ];
 
@@ -96,27 +96,38 @@ export default function Header(): React.ReactElement {
             <div className="grid grid-cols-3 items-center">
                 {/* 左：品牌 */}
                 {/* 品牌在各端均显示 */}
-                <Link href="/" className="flex items-center gap-2">
+                <Link href="/" className="flex items-center gap-2 group">
                     <img
                         src={(theme === 'dark' || (theme === 'system' && systemDark)) ? '/logo-dark.png' : '/logo.png'}
                         onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
                         alt="WaTouKuang Logo"
-                        className="h-10 w-auto select-none"
+                        className="h-10 w-auto select-none transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
                     />
                     <span
-                        className="text-xl md:text-2xl font-semibold tracking-tight leading-none select-none bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-sky-400 dark:to-emerald-300
-                        bg-clip-text text-transparent">HAVE AN IDEA</span>
+                        className="text-xl md:text-2xl font-semibold tracking-tight leading-none select-none 
+                                   bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 
+                                   dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400
+                                   bg-clip-text text-transparent bg-[length:200%_100%] 
+                                   hover:animate-pulse transition-all duration-500 
+                                   group-hover:bg-[position:100%_0%]">
+                        HAVE AN IDEA
+                    </span>
                 </Link>
 
                 {/* 中：顶部导航（居中） */}
-                <nav className="hidden md:flex items-center justify-center gap-2">
+                <nav className="hidden md:flex items-center justify-center gap-3">
                     {menuItems.map((item) => {
                         const active = router.pathname === item.href || router.pathname.startsWith(item.href + '/');
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${active ? 'bg-gray-900 text-white dark:bg-white dark:text-black' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}
+                                className={`px-4 py-2 rounded-full text-[15px] md:text-base font-semibold tracking-wide 
+                                           transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 ${
+                                  active 
+                                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 dark:from-blue-400 dark:to-indigo-500 dark:shadow-blue-400/20'
+                                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/8 backdrop-blur-sm'
+                                }`}
                             >
                                 {item.name}
                             </Link>
@@ -127,30 +138,32 @@ export default function Header(): React.ReactElement {
                     <div className="relative" ref={toolsMenuRef}>
                         <button
                             onClick={() => setToolsMenuOpen(!toolsMenuOpen)}
-                            className={`px-3 py-1.5 rounded-full text-sm transition-colors flex items-center gap-1 ${
+                            className={`px-4 py-2 rounded-full text-[15px] md:text-base font-semibold tracking-wide 
+                                       transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 flex items-center gap-1 ${
                                 crowdfundingTools.some(tool => router.pathname === tool.href) 
-                                    ? 'bg-gray-900 text-white dark:bg-white dark:text-black' 
-                                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 dark:from-blue-400 dark:to-indigo-500 dark:shadow-blue-400/20' 
+                                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/8 backdrop-blur-sm'
                             }`}
                         >
                             TOOLS
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`w-3 h-3 transition-transform duration-200 ${toolsMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
                         
                         {toolsMenuOpen && (
-                            <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-[#1e1e1e] rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                            <div className="absolute top-full left-0 mt-2 w-64 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl shadow-gray-900/10 dark:shadow-black/20 z-50 animate-in slide-in-from-top-2 duration-200">
                                 <div className="p-2">
-                                    {crowdfundingTools.map((tool) => (
+                                    {crowdfundingTools.map((tool, index) => (
                                         <Link
                                             key={tool.href}
                                             href={tool.href}
                                             onClick={() => setToolsMenuOpen(false)}
-                                            className="block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                            className="block p-3 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 transition-all duration-200 transform hover:scale-[1.02] group"
+                                            style={{ animationDelay: `${index * 50}ms` }}
                                         >
-                                            <div className="font-medium text-sm">{tool.name}</div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <div className="font-medium text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{tool.name}</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
                                                 {tool.description}
                                             </div>
                                         </Link>
@@ -234,7 +247,13 @@ export default function Header(): React.ReactElement {
 
                 <button
                     onClick={() => setLoginOpen(true)}
-                    className="bg-black text-white px-3 py-1.5 md:px-4 rounded-full text-sm whitespace-nowrap">WALLET
+                    className="px-4 py-2 rounded-full text-[15px] md:text-base font-semibold whitespace-nowrap
+                               bg-gradient-to-r from-indigo-500 to-purple-600 text-white 
+                               hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25
+                               dark:from-indigo-400 dark:to-purple-500 dark:hover:from-indigo-500 dark:hover:to-purple-600
+                               transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 shadow-md"
+                >
+                    WALLET
                 </button>
             </div>
             {/* 关闭 grid 容器 */}

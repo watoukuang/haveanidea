@@ -1,7 +1,7 @@
 import React from 'react';
 import Layout from '../components/Layout';
 
-export default function Writing(): React.ReactElement {
+export default function Launch(): React.ReactElement {
   const [walletAddress, setWalletAddress] = React.useState('');
   const [ideaTitle, setIdeaTitle] = React.useState('');
   const [idea, setIdea] = React.useState('');
