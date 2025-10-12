@@ -126,7 +126,7 @@ export default function Header(): React.ReactElement {
                                            transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 ${
                                   active 
                                     ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 dark:from-blue-400 dark:to-indigo-500 dark:shadow-blue-400/20'
-                                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/8 backdrop-blur-sm'
+                                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 backdrop-blur-sm'
                                 }`}
                             >
                                 {item.name}
@@ -142,7 +142,7 @@ export default function Header(): React.ReactElement {
                                        transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 flex items-center gap-1 ${
                                 crowdfundingTools.some(tool => router.pathname === tool.href) 
                                     ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 dark:from-blue-400 dark:to-indigo-500 dark:shadow-blue-400/20' 
-                                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/8 backdrop-blur-sm'
+                                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 backdrop-blur-sm'
                             }`}
                         >
                             TOOLS

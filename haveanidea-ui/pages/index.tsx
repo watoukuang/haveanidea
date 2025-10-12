@@ -61,25 +61,40 @@ const categories = [...new Set(
                 </div>
 
                 <div className="flex items-center flex-wrap gap-2 md:gap-3 mb-6 md:mb-8 animate-in slide-in-from-bottom duration-700 delay-300">
-                    <button className="px-4 py-2 rounded-full text-xs md:text-sm font-medium
-                                     bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
-                                     shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30
-                                     transition-all duration-300 transform hover:scale-105">
+                    <button
+                      onClick={() => { setSelectedCategory(''); setSelectedType(''); }}
+                      className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 
+                        ${selectedCategory === ''
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
+                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800 backdrop-blur-sm'}`}
+                    >
                         All
                     </button>
-                    <button className="px-4 py-2 rounded-full text-xs md:text-sm font-medium text-gray-700 
-                                     hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800
-                                     transition-all duration-300 transform hover:scale-105 backdrop-blur-sm">
+                    <button
+                      onClick={() => { setSelectedCategory('nft'); }}
+                      className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 backdrop-blur-sm 
+                        ${selectedCategory === 'nft'
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
+                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'}`}
+                    >
                         💎 NFT Ideas
                     </button>
-                    <button className="px-4 py-2 rounded-full text-xs md:text-sm font-medium text-gray-700 
-                                     hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800
-                                     transition-all duration-300 transform hover:scale-105 backdrop-blur-sm">
+                    <button
+                      onClick={() => { setSelectedCategory('free'); }}
+                      className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 backdrop-blur-sm 
+                        ${selectedCategory === 'free'
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
+                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'}`}
+                    >
                         🆓 Free Ideas
                     </button>
-                    <button className="px-4 py-2 rounded-full text-xs md:text-sm font-medium text-gray-700 
-                                     hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800
-                                     transition-all duration-300 transform hover:scale-105 backdrop-blur-sm">
+                    <button
+                      onClick={() => { setSelectedCategory('trending'); }}
+                      className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 backdrop-blur-sm 
+                        ${selectedCategory === 'trending'
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
+                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'}`}
+                    >
                         🔥 Trending
                     </button>
                 </div>

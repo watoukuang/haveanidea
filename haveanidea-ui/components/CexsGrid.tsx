@@ -2,9 +2,20 @@ import React, { useMemo, useState } from 'react';
 import CexCard from './CexCard';
 import { Tool, ToolsGridProps } from '../types';
 
-export default function CexsGrid({ tools }: ToolsGridProps): React.ReactElement {
-  // 现阶段不再按分类/类型过滤，直接展示传入数据
-  const list = useMemo(() => tools, [tools]);
+export default function CexsGrid({ tools, selectedCategory, selectedType }: ToolsGridProps): React.ReactElement {
+  // 过滤逻辑：支持模糊匹配，避免严格依赖枚举值
+  const list = useMemo(() => {
+    const cat = (selectedCategory || '').toLowerCase();
+    const typ = (selectedType || '').toLowerCase();
+    if (!cat && !typ) return tools;
+    return (tools || []).filter((t: Tool) => {
+      const c = (t.category || '').toLowerCase();
+      const ty = (t.type || '').toLowerCase();
+      const catOk = !cat || c.includes(cat);
+      const typeOk = !typ || ty.includes(typ);
+      return catOk && typeOk;
+    });
+  }, [tools, selectedCategory, selectedType]);
   const [page, setPage] = useState<number>(1);
   const pageSize = 8; // 每页卡片数量
   const totalPages = Math.max(1, Math.ceil((list?.length || 0) / pageSize));
