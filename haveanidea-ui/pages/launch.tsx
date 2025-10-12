@@ -12,21 +12,69 @@ export default function Launch(): React.ReactElement {
   const [crowdfundingMode, setCrowdfundingMode] = React.useState('nft');
   const [fundingPrice, setFundingPrice] = React.useState('');
   const [revenueShare, setRevenueShare] = React.useState('10');
-  const [fundingGoal, setFundingGoal] = React.useState('');
-  const [tokenSymbol, setTokenSymbol] = React.useState('');
-  const [twitter, setTwitter] = React.useState('');
-  const [discord, setDiscord] = React.useState('');
-  const [telegram, setTelegram] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [message, setMessage] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [isConnected, setIsConnected] = React.useState(false);
-  const [isDeploying, setIsDeploying] = React.useState(false);
-  const [txHash, setTxHash] = React.useState<string>('');
-  const [showSuccessModal, setShowSuccessModal] = React.useState(false);
-  const [deployedMode, setDeployedMode] = React.useState<string>('');
+  
 
   const maxLen = 1000;
+
+  React.useEffect(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('walletAddress') : null;
+      if (saved) {
+        setWalletAddress(saved);
+        setIsConnected(true);
+        setError(null);
+      }
+    } catch {}
+
+    const handler = (e: any) => {
+      if (e?.detail?.address) {
+        setWalletAddress(e.detail.address);
+        setIsConnected(true);
+        setError(null);
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('wallet_connected', handler as any);
+    }
+    // 检查现有账户
+    const eth = (typeof window !== 'undefined' && (window as any).ethereum) ? (window as any).ethereum : null;
+    const initAccounts = async () => {
+      try {
+        if (!eth) return;
+        const accounts = await eth.request({ method: 'eth_accounts' });
+        const addr = accounts?.[0];
+        if (addr) {
+          setWalletAddress(addr);
+          setIsConnected(true);
+          setError(null);
+          try { localStorage.setItem('walletAddress', addr); } catch {}
+        }
+      } catch {}
+    };
+    initAccounts();
+
+    // 监听账户变更
+    const onAccountsChanged = (accounts: string[]) => {
+      const addr = accounts?.[0] || '';
+      setWalletAddress(addr);
+      setIsConnected(!!addr);
+      if (addr) setError(null);
+      try {
+        if (addr) localStorage.setItem('walletAddress', addr); else localStorage.removeItem('walletAddress');
+      } catch {}
+    };
+    if (eth && eth.on) eth.on('accountsChanged', onAccountsChanged);
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('wallet_connected', handler as any);
+      }
+      if (eth && eth.removeListener) eth.removeListener('accountsChanged', onAccountsChanged);
+    };
+  }, []);
 
   const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,6 +105,13 @@ export default function Launch(): React.ReactElement {
         if (accounts.length > 0) {
           setWalletAddress(accounts[0]);
           setIsConnected(true);
+          setError(null);
+          try {
+            localStorage.setItem('walletAddress', accounts[0]);
+          } catch {}
+          try {
+            window.dispatchEvent(new CustomEvent('wallet_connected', { detail: { address: accounts[0] } }));
+          } catch {}
         }
       } else {
         setError('Please install MetaMask or another Web3 wallet');
@@ -76,115 +131,17 @@ export default function Launch(): React.ReactElement {
     });
   };
 
-  const deployToBlockchain = async (data: any): Promise<string> => {
-    setIsDeploying(true);
-    
-    try {
-      if (!window.ethereum) throw new Error('Please install MetaMask');
-      
-      const provider = new (window as any).ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      
-      if (data.crowdfunding) {
-        if (data.crowdfunding.mode === 'nft') {
-          // 部署NFT众筹合约
-          return await deployNFTCrowdfunding(signer, data);
-        } else if (data.crowdfunding.mode === 'token') {
-          // 部署Token众筹合约
-          return await deployTokenCrowdfunding(signer, data);
-        } else if (data.crowdfunding.mode === 'dao') {
-          // 部署DAO众筹合约
-          return await deployDAOCrowdfunding(signer, data);
-        } else if (data.crowdfunding.mode === 'presale') {
-          // 部署预售合约
-          return await deployPresaleCrowdfunding(signer, data);
-        }
-      } else {
-        // 仅存储想法，不众筹
-        return await deployIdeaRegistry(signer, data);
-      }
-      
-      throw new Error('Invalid crowdfunding mode');
-      
-    } catch (error: any) {
-      throw new Error(`Deployment failed: ${error.message}`);
-    }
-  };
-
-  const deployNFTCrowdfunding = async (signer: any, data: any): Promise<string> => {
-    // NFT众筹合约部署逻辑
-    const contractFactory = new (window as any).ethers.ContractFactory(
-      NFT_CROWDFUNDING_ABI, 
-      NFT_CROWDFUNDING_BYTECODE, 
-      signer
-    );
-    
-    const contract = await contractFactory.deploy(
-      data.title,
-      data.iconHash,
-      (window as any).ethers.utils.parseEther(data.crowdfunding.price),
-      Math.floor(parseFloat(data.crowdfunding.goal) / parseFloat(data.crowdfunding.price)), // maxSupply
-      data.crowdfunding.revenueShare
-    );
-    
-    await contract.deployed();
-    return contract.deployTransaction.hash;
-  };
-
-  const deployTokenCrowdfunding = async (signer: any, data: any): Promise<string> => {
-    // Token众筹合约部署逻辑
-    const contractFactory = new (window as any).ethers.ContractFactory(
-      TOKEN_CROWDFUNDING_ABI,
-      TOKEN_CROWDFUNDING_BYTECODE,
-      signer
-    );
-    
-    const contract = await contractFactory.deploy(
-      data.crowdfunding.tokenSymbol,
-      data.title,
-      data.iconHash,
-      (window as any).ethers.utils.parseEther(data.crowdfunding.price),
-      (window as any).ethers.utils.parseEther(data.crowdfunding.goal),
-      data.crowdfunding.revenueShare
-    );
-    
-    await contract.deployed();
-    return contract.deployTransaction.hash;
-  };
-
-  const deployDAOCrowdfunding = async (signer: any, data: any): Promise<string> => {
-    // DAO众筹合约部署逻辑 - 创建治理代币和DAO
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(`0xdao${Math.random().toString(16).substring(2)}`), 2000);
-    });
-  };
-
-  const deployPresaleCrowdfunding = async (signer: any, data: any): Promise<string> => {
-    // 预售众筹合约部署逻辑
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(`0xpresale${Math.random().toString(16).substring(2)}`), 2000);
-    });
-  };
-
-  const deployIdeaRegistry = async (signer: any, data: any): Promise<string> => {
-    // 仅想法注册，不众筹
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(`0xidea${Math.random().toString(16).substring(2)}`), 1500);
-    });
-  };
+  // 移除链上部署逻辑，仅与后端交互
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
     setError(null);
 
-    if (!walletAddress.trim()) return setError('Please connect your wallet');
+    if (!walletAddress.trim()) return setError('请先连接钱包');
     if (!ideaTitle.trim()) return setError('Please enter idea title');
     if (!idea.trim()) return setError('Please describe your idea');
     if (!iconFile) return setError('Please upload an icon for your idea');
-    if (enableCrowdfunding && !fundingPrice.trim()) return setError('Please set funding price for your crowdfunding campaign');
-    if (enableCrowdfunding && crowdfundingMode === 'token' && !tokenSymbol.trim()) return setError('Please set token symbol for token crowdfunding');
-    if (enableCrowdfunding && !twitter.trim() && !discord.trim() && !telegram.trim()) return setError('Please provide at least one contact method for supporters to reach you');
 
     try {
       setSubmitting(true);
@@ -193,85 +150,42 @@ export default function Launch(): React.ReactElement {
       // 1. 上传图标到IPFS
       const iconHash = await uploadToIPFS(iconFile);
       
-      setMessage('⛓️ Deploying to blockchain...');
+      setMessage('📝 Saving...');
       
-      // 2. 准备区块链数据
+      // 2. 准备提交数据（仅后端）
       const blockchainData = {
-        creator: walletAddress,
         title: ideaTitle,
         description: idea,
         iconHash,
         tags: tags.split(',').map(t => t.trim()).filter(t => t),
         crowdfunding: enableCrowdfunding ? {
           mode: crowdfundingMode,
-          price: fundingPrice,
-          goal: fundingGoal,
-          revenueShare,
-          tokenSymbol
         } : null,
-        socialMedia: { twitter, discord, telegram },
         timestamp: Date.now()
       };
       
-      // 3. 部署到区块链
-      const txHash = await deployToBlockchain(blockchainData);
-      setTxHash(txHash);
-      
-      // 4. 记录到后端（用于索引和搜索）
+      // 3. 记录到后端（用于索引和搜索）
       await fetch('/api/launch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...blockchainData,
-          txHash,
           iconHash
         }),
       });
       
-      setMessage(`✅ Idea deployed successfully! Transaction: ${txHash.substring(0, 10)}...`);
-      
-      // 显示成功模态框
-      if (enableCrowdfunding) {
-        setDeployedMode(crowdfundingMode);
-        setShowSuccessModal(true);
-      }
+      setMessage('✅ Idea submitted successfully!');
       
       // 重置表单
       setWalletAddress(''); setIdeaTitle(''); setIdea(''); setTags(''); 
       setIconFile(null); setIconPreview(''); setEnableCrowdfunding(false); 
-      setCrowdfundingMode('nft'); setFundingPrice(''); setRevenueShare('10'); 
-      setFundingGoal(''); setTokenSymbol(''); setTwitter(''); setDiscord(''); setTelegram('');
+      setCrowdfundingMode('nft');
       
     } catch (err: any) {
       setError(err?.message || 'Blockchain deployment failed, please try again');
     } finally {
       setSubmitting(false);
-      setIsDeploying(false);
     }
-  };
-
-  const getToolUrl = (mode: string) => {
-    switch (mode) {
-      case 'nft': return '/nft-mint';
-      case 'token': return '/token-sale';
-      case 'dao': return '/dao-governance';
-      case 'presale': return '/presale';
-      default: return '/';
-    }
-  };
-
-  const getToolName = (mode: string) => {
-    switch (mode) {
-      case 'nft': return 'NFT Minting Hub';
-      case 'token': return 'Token Sale Hub';
-      case 'dao': return 'DAO Governance Hub';
-      case 'presale': return 'Presale Hub';
-      default: return 'Tools';
-    }
-  };
-
-  const goToTool = () => {
-    window.location.href = getToolUrl(deployedMode);
   };
 
   return (
@@ -286,31 +200,36 @@ export default function Launch(): React.ReactElement {
           <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-400/70 via-sky-500/70 to-fuchsia-600/70 blur-2xl opacity-35"></div>
           <div className="relative rounded-2xl border bg-white/90 border-gray-200 dark:bg-[#0f1115]/90 dark:border-violet-500/40 backdrop-blur px-6 md:px-7 py-7 md:py-8 shadow-sm md:shadow dark:shadow-[0_0_0_1px_rgba(67,56,202,0.5)]">
             <form onSubmit={onSubmit} className="space-y-5 md:space-y-6">
-              {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
-              {message && <div className="text-sm text-emerald-600 dark:text-emerald-400">{message}</div>}
-
-              {/* Wallet Connection */}
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200"><span className="text-red-500 mr-1">*</span>Wallet Address</label>
-                {!isConnected ? (
-                  <button
-                    type="button"
-                    onClick={connectWallet}
-                    className="w-full rounded-md bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
-                  >
-                    🦊 Connect Wallet
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <input
-                      value={walletAddress}
-                      readOnly
-                      className="flex-1 rounded-md bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 text-sm dark:bg-[#1a1d23] dark:text-gray-300 dark:border-gray-700"
-                    />
-                    <span className="text-green-500 text-sm">✓ Connected</span>
+              {error && (
+                error === '请先连接钱包' ? (
+                  <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/80 dark:border-blue-800/50 dark:bg-blue-900/20">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="text-xl leading-none">🦊</div>
+                        <div>
+                          <div className="font-medium text-blue-900 dark:text-blue-200">请先连接钱包</div>
+                          <div className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">提交前需连接钱包以完成签名与部署。</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={connectWallet}
+                        className="shrink-0 inline-flex items-center px-3 py-1.5 rounded-md text-white text-xs font-medium bg-gradient-to-r from-purple-500 to-blue-500 hover:opacity-90"
+                      >
+                        立即连接
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
+                ) : (
+                  <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+                )
+              )}
+              {message && (
+                <div className="p-3 rounded-lg border border-emerald-300 bg-emerald-50/80 text-emerald-800 text-sm dark:border-emerald-700/60 dark:bg-emerald-900/20 dark:text-emerald-200">
+                  {message}
+                </div>
+              )}
+
 
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200"><span className="text-red-500 mr-1">*</span>Idea Title</label>
@@ -472,97 +391,26 @@ export default function Launch(): React.ReactElement {
               </div>
 
               <div className="pt-2">
-                <button type="submit" disabled={submitting || isDeploying} className="w-full inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 disabled:cursor-not-allowed shadow">
+                <button type="submit" disabled={submitting} className="w-full inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 disabled:cursor-not-allowed shadow">
                   {submitting ? (
                     <>
                       <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      {isDeploying ? 'Deploying to Blockchain...' : 'Uploading to IPFS...'}
+                      Saving...
                     </>
                   ) : (
-                    <>⛓️ Deploy to Blockchain</>
+                    <>Submit</>
                   )}
                 </button>
                 
-                {txHash && (
-                  <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                    <p className="text-sm text-green-800 dark:text-green-200">
-                      <strong>Transaction Hash:</strong>
-                      <br />
-                      <code className="break-all text-xs">{txHash}</code>
-                    </p>
-                    <a 
-                      href={`https://etherscan.io/tx/${txHash}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center mt-2 text-xs text-green-600 dark:text-green-400 hover:underline"
-                    >
-                      View on Etherscan ↗
-                    </a>
-                  </div>
-                )}
+
               </div>
             </form>
           </div>
-        </div>
-      </div>
-
-      {/* 成功部署模态框 */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-8 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              
-              <h3 className="text-xl font-semibold mb-2">🎉 Deployment Successful!</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Your idea has been successfully deployed to the blockchain with {deployedMode.toUpperCase()} crowdfunding enabled.
-              </p>
-
-              {txHash && (
-                <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Transaction Hash:</p>
-                  <code className="text-xs break-all font-mono">{txHash}</code>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                <button
-                  onClick={goToTool}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
-                >
-                  🚀 Go to {getToolName(deployedMode)}
-                </button>
-                
-                <button
-                  onClick={() => setShowSuccessModal(false)}
-                  className="w-full px-6 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-                >
-                  Stay on this page
-                </button>
-              </div>
-
-              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                  What's Next?
-                </h4>
-                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 text-left">
-                  <li>• Your project is now live on the blockchain</li>
-                  <li>• Supporters can start participating in your crowdfunding</li>
-                  <li>• Use the {getToolName(deployedMode)} to manage your campaign</li>
-                  <li>• Share your project with the community</li>
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
-      )}
     </Layout>
   );
 }

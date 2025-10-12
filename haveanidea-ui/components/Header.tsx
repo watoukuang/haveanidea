@@ -18,6 +18,8 @@ export default function Header(): React.ReactElement {
     const [loginOpen, setLoginOpen] = useState(false);
     const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
     const toolsMenuRef = useRef<HTMLDivElement | null>(null);
+    const [walletMenuOpen, setWalletMenuOpen] = useState(false);
+    const walletMenuRef = useRef<HTMLDivElement | null>(null);
 
     // Apply theme based on preference and system setting
     useEffect(() => {
@@ -74,6 +76,16 @@ export default function Header(): React.ReactElement {
         if (toolsMenuOpen) document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, [toolsMenuOpen]);
+
+    // 点击外部关闭钱包菜单
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (!walletMenuRef.current) return;
+            if (!walletMenuRef.current.contains(e.target as Node)) setWalletMenuOpen(false);
+        };
+        if (walletMenuOpen) document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [walletMenuOpen]);
     // 顶部导航菜单（来自原 Sidebar）
     const menuItems: { name: string; href: string }[] = [
         { name: 'IDEAS', href: '/' },
@@ -89,6 +101,71 @@ export default function Header(): React.ReactElement {
         { name: '🏛️ DAO Governance', href: '/dao-governance', description: 'Vote on proposals' },
         { name: '🎯 Presale Hub', href: '/presale', description: 'Early access deals' },
     ];
+
+    // 钱包地址显示
+    const [walletAddress, setWalletAddress] = useState<string>('');
+
+    useEffect(() => {
+        try {
+            const saved = typeof window !== 'undefined' ? localStorage.getItem('walletAddress') : null;
+            if (saved) setWalletAddress(saved);
+        } catch {}
+
+        const handleWalletConnected = (e: any) => {
+            const addr = e?.detail?.address;
+            if (addr) {
+                setWalletAddress(addr);
+                try { localStorage.setItem('walletAddress', addr); } catch {}
+            }
+        };
+        if (typeof window !== 'undefined') {
+            window.addEventListener('wallet_connected', handleWalletConnected as any);
+        }
+
+        // 监听 provider 账户变化
+        const eth = (typeof window !== 'undefined' && (window as any).ethereum) ? (window as any).ethereum : null;
+        const accountsChanged = (accounts: string[]) => {
+            const addr = accounts?.[0] || '';
+            setWalletAddress(addr);
+            try {
+                if (addr) localStorage.setItem('walletAddress', addr); else localStorage.removeItem('walletAddress');
+            } catch {}
+        };
+        if (eth && eth.on) {
+            eth.on('accountsChanged', accountsChanged);
+        }
+
+        return () => {
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('wallet_connected', handleWalletConnected as any);
+            }
+            if (eth && eth.removeListener) {
+                eth.removeListener('accountsChanged', accountsChanged);
+            }
+        };
+    }, []);
+
+    const shortAddr = (addr: string) => addr ? `${addr.slice(0,6)}...${addr.slice(-4)}` : '';
+
+    // 头部连接钱包（不弹登录框）
+    const connectWallet = async () => {
+        try {
+            if (typeof window !== 'undefined' && (window as any).ethereum) {
+                const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+                if (accounts?.length > 0) {
+                    const addr = accounts[0];
+                    setWalletAddress(addr);
+                    try { localStorage.setItem('walletAddress', addr); } catch {}
+                    try { window.dispatchEvent(new CustomEvent('wallet_connected', { detail: { address: addr } })); } catch {}
+                }
+            } else {
+                // 简单告知，无外部依赖
+                alert('Please install MetaMask or another Web3 wallet');
+            }
+        } catch (err) {
+            console.error('Wallet connect failed:', err);
+        }
+    };
 
     return (
         <header
@@ -208,16 +285,45 @@ export default function Header(): React.ReactElement {
                     )}
                 </div>
 
-                <button
-                    onClick={() => setLoginOpen(true)}
-                    className="px-4 py-2 rounded-full text-[15px] md:text-base font-semibold whitespace-nowrap
-                               bg-gradient-to-r from-indigo-500 to-purple-600 text-white 
-                               hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25
-                               dark:from-indigo-400 dark:to-purple-500 dark:hover:from-indigo-500 dark:hover:to-purple-600
-                               transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 shadow-md"
-                >
-                    WALLET
-                </button>
+                <div className="relative" ref={walletMenuRef}>
+                    <button
+                        onClick={() => { walletAddress ? setWalletMenuOpen((v)=>!v) : connectWallet(); }}
+                        className="px-4 py-2 rounded-full text-[15px] md:text-base font-semibold whitespace-nowrap
+                                   bg-gradient-to-r from-indigo-500 to-purple-600 text-white 
+                                   hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25
+                                   dark:from-indigo-400 dark:to-purple-500 dark:hover:from-indigo-500 dark:hover:to-purple-600
+                                   transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 shadow-md"
+                    >
+                        {walletAddress ? shortAddr(walletAddress) : 'WALLET'}
+                    </button>
+                    {walletAddress && walletMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-56 rounded-2xl border bg-white/98 backdrop-blur-sm shadow-lg ring-1 ring-black/5 p-2
+                                       border-gray-200 dark:bg-[#1e1e1e] dark:border-[#2d2d30] dark:ring-white/5 dark:text-gray-200 z-50">
+                            <button
+                                onClick={async () => { try { await navigator.clipboard.writeText(walletAddress); } catch {} setWalletMenuOpen(false); }}
+                                className="group flex w-full items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                            >
+                                <span>📋</span>
+                                <span className="flex-1 text-left">Copy Address</span>
+                            </button>
+                            <button
+                                onClick={() => { window.open(`https://etherscan.io/address/${walletAddress}`, '_blank'); setWalletMenuOpen(false); }}
+                                className="group flex w-full items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                            >
+                                <span>🔗</span>
+                                <span className="flex-1 text-left">View on Block Explorer</span>
+                            </button>
+                            <div className="my-1 h-px bg-gray-200 dark:bg-gray-800"/>
+                            <button
+                                onClick={() => { setWalletAddress(''); try { localStorage.removeItem('walletAddress'); } catch {}; setWalletMenuOpen(false); }}
+                                className="group flex w-full items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                                <span>🚪</span>
+                                <span className="flex-1 text-left">Disconnect (Local)</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
             {/* 关闭 grid 容器 */}
             </div>

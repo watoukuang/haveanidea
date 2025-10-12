@@ -1,6 +1,5 @@
 import React from 'react';
 import Header from './Header';
-import MobileNav from './MobileNav';
 import Footer from './Footer';
 import {LayoutProps} from '../types';
 
@@ -16,9 +15,6 @@ export default function Layout({children}: LayoutProps): React.ReactElement {
                     {children}
                 </main>
                 <Footer/>
-                <div className="lg:hidden">
-                    <MobileNav/>
-                </div>
             </div>
         </div>
     );
