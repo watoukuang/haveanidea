@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { ToolCardProps, Tag } from '../types';
 
 export default function CexCard({ cex }: ToolCardProps): React.ReactElement {
@@ -22,7 +23,7 @@ export default function CexCard({ cex }: ToolCardProps): React.ReactElement {
   const first: Tag | undefined = cex.messages?.[0];
 
   return (
-    <div className="group rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow dark:bg-[#15171b] dark:border-[#23252a]">
+    <Link href={`/ideas/${cex.id}`} className="group block rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow dark:bg-[#15171b] dark:border-[#23252a] focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
       {/* Thumbnail area */}
       <div className="relative aspect-[16/10] bg-gray-100 dark:bg-[#1d2026] flex items-center justify-center">
         <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-4xl select-none" style={{ backgroundColor: cex.bg_color || '#eef2ff' }}>
@@ -45,11 +46,8 @@ export default function CexCard({ cex }: ToolCardProps): React.ReactElement {
         {/* Footer meta */}
         <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
           <span>{first ? `更新于 ${formatTime(first.created)}` : '未更新'}</span>
-          {first?.href && (
-            <a href={first.href} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline dark:text-indigo-400">详情</a>
-          )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

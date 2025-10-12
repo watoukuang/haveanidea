@@ -9,6 +9,7 @@ export default function Home(): React.ReactElement {
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string>('');
     const [cexs, setCexs] = useState<Tool[]>([]);
+    const [selectedChain, setSelectedChain] = useState<'eth'|'sol'|'bsc'|'polygon'|''>('eth');
 
     useEffect(() => {
       let ignore = false;
@@ -51,12 +52,24 @@ const categories = [...new Set(
                                      focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 
                                      transition-all duration-300 hover:bg-white dark:hover:bg-gray-900"
                         />
-                        <button className="inline-flex items-center text-sm font-medium px-4 py-2 rounded-full whitespace-nowrap 
-                                         bg-gradient-to-r from-amber-400 to-orange-500 text-black 
-                                         hover:from-amber-500 hover:to-orange-600 hover:shadow-lg hover:shadow-amber-500/25
-                                         transition-all duration-300 transform hover:scale-105 active:scale-95">
-                            ✨ Mint Idea NFT
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <label htmlFor="chain-select" className="sr-only">Select blockchain</label>
+                          <select
+                            id="chain-select"
+                            value={selectedChain}
+                            onChange={(e) => setSelectedChain(e.target.value as any)}
+                            className="text-sm rounded-full px-3 py-2 bg-white/80 border border-gray-200/60 shadow-sm 
+                                       hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 
+                                       dark:bg-gray-900/80 dark:border-gray-700/60 dark:text-gray-200"
+                            aria-label="Select blockchain to filter ideas"
+                          >
+                            <option value="">All Chains</option>
+                            <option value="eth">Ethereum</option>
+                            <option value="sol">Solana</option>
+                            <option value="bsc">BNB Chain</option>
+                            <option value="polygon">Polygon</option>
+                          </select>
+                        </div>
                     </div>
                 </div>
 
@@ -103,6 +116,7 @@ const categories = [...new Set(
                     tools={cexs}
                     selectedCategory={selectedCategory}
                     selectedType={selectedType}
+                    selectedChain={selectedChain}
                 />
             </div>
         </Layout>

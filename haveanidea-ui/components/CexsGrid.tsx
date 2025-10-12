@@ -2,20 +2,23 @@ import React, { useMemo, useState } from 'react';
 import CexCard from './CexCard';
 import { Tool, ToolsGridProps } from '../types';
 
-export default function CexsGrid({ tools, selectedCategory, selectedType }: ToolsGridProps): React.ReactElement {
+export default function CexsGrid({ tools, selectedCategory, selectedType, selectedChain }: ToolsGridProps): React.ReactElement {
   // 过滤逻辑：支持模糊匹配，避免严格依赖枚举值
   const list = useMemo(() => {
     const cat = (selectedCategory || '').toLowerCase();
     const typ = (selectedType || '').toLowerCase();
-    if (!cat && !typ) return tools;
+    const chain = (selectedChain || '').toLowerCase();
+    if (!cat && !typ && !chain) return tools;
     return (tools || []).filter((t: Tool) => {
       const c = (t.category || '').toLowerCase();
       const ty = (t.type || '').toLowerCase();
+      const ch = (t.chain || '').toLowerCase();
       const catOk = !cat || c.includes(cat);
       const typeOk = !typ || ty.includes(typ);
-      return catOk && typeOk;
+      const chainOk = !chain || ch === chain;
+      return catOk && typeOk && chainOk;
     });
-  }, [tools, selectedCategory, selectedType]);
+  }, [tools, selectedCategory, selectedType, selectedChain]);
   const [page, setPage] = useState<number>(1);
   const pageSize = 8; // 每页卡片数量
   const totalPages = Math.max(1, Math.ceil((list?.length || 0) / pageSize));

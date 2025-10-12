@@ -78,6 +78,7 @@ export default function Header(): React.ReactElement {
     const menuItems: { name: string; href: string }[] = [
         { name: 'IDEAS', href: '/' },
         { name: 'LAUNCH', href: '/launch' },
+        { name: 'MARKETPLACE', href: '/marketplace' },
         { name: 'ABOUT', href: '/about' },
     ];
 
@@ -134,44 +135,6 @@ export default function Header(): React.ReactElement {
                         );
                     })}
                     
-                    {/* 众筹工具下拉菜单 */}
-                    <div className="relative" ref={toolsMenuRef}>
-                        <button
-                            onClick={() => setToolsMenuOpen(!toolsMenuOpen)}
-                            className={`px-4 py-2 rounded-full text-[15px] md:text-base font-semibold tracking-wide 
-                                       transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 flex items-center gap-1 ${
-                                crowdfundingTools.some(tool => router.pathname === tool.href) 
-                                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 dark:from-blue-400 dark:to-indigo-500 dark:shadow-blue-400/20' 
-                                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 backdrop-blur-sm'
-                            }`}
-                        >
-                            TOOLS
-                            <svg className={`w-3 h-3 transition-transform duration-200 ${toolsMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                        
-                        {toolsMenuOpen && (
-                            <div className="absolute top-full left-0 mt-2 w-64 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl shadow-gray-900/10 dark:shadow-black/20 z-50 animate-in slide-in-from-top-2 duration-200">
-                                <div className="p-2">
-                                    {crowdfundingTools.map((tool, index) => (
-                                        <Link
-                                            key={tool.href}
-                                            href={tool.href}
-                                            onClick={() => setToolsMenuOpen(false)}
-                                            className="block p-3 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 transition-all duration-200 transform hover:scale-[1.02] group"
-                                            style={{ animationDelay: `${index * 50}ms` }}
-                                        >
-                                            <div className="font-medium text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{tool.name}</div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                                                {tool.description}
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
                 </nav>
                 {/* 右：功能区 */}
             <div className="flex items-center justify-end space-x-2 md:space-x-3">

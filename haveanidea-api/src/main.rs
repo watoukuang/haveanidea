@@ -9,6 +9,7 @@ mod utils;
 mod app;
 mod bootstrap;
 mod router;
+mod db_init;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

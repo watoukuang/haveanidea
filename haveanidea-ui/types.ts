@@ -14,6 +14,18 @@ export interface Tool {
     bg_color?: string;
     messages: Tag[];
     category?: string;
+    chain?: 'eth' | 'sol' | 'bsc' | 'polygon';
+    deployer?: string; // wallet address who deployed/owns the idea
+    launch?: {
+        priceEth?: number;
+        fundingGoalEth?: number;
+        revenueSharePct?: number;
+        contacts?: {
+            twitter?: string;
+            discord?: string;
+            telegram?: string;
+        }
+    };
 }
 
 export interface FilterDropdownProps {
@@ -31,6 +43,7 @@ export interface ToolsGridProps {
     tools: Tool[];
     selectedCategory: string;
     selectedType: string;
+    selectedChain?: 'eth' | 'sol' | 'bsc' | 'polygon' | '';
 }
 
 // 推特情报站数据结构

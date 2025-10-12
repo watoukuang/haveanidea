@@ -462,100 +462,10 @@ export default function Launch(): React.ReactElement {
                         </label>
                       </div>
                     </div>
-                    {/* Dynamic Fields Based on Crowdfunding Mode */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200"><span className="text-red-500 mr-1">*</span>
-                          {crowdfundingMode === 'nft' ? 'NFT Price (ETH)' : 
-                           crowdfundingMode === 'token' ? 'Token Price (ETH)' : 
-                           crowdfundingMode === 'dao' ? 'DAO Share Price (ETH)' : 'Presale Price (ETH)'}
-                        </label>
-                        <input
-                          type="number"
-                          step="0.001"
-                          value={fundingPrice}
-                          onChange={(e) => setFundingPrice(e.target.value)}
-                          placeholder="0.1"
-                          className="w-full rounded-md bg-white text-gray-900 placeholder-gray-400 border border-gray-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400/60 dark:bg-[#171a21] dark:text-gray-100 dark:placeholder-gray-500 dark:border-transparent dark:focus:ring-2 dark:focus:ring-indigo-500/30 dark:focus:border-indigo-400/60"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Funding Goal (ETH)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={fundingGoal}
-                          onChange={(e) => setFundingGoal(e.target.value)}
-                          placeholder="10"
-                          className="w-full rounded-md bg-white text-gray-900 placeholder-gray-400 border border-gray-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400/60 dark:bg-[#171a21] dark:text-gray-100 dark:placeholder-gray-500 dark:border-transparent dark:focus:ring-2 dark:focus:ring-indigo-500/30 dark:focus:border-indigo-400/60"
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total funding target</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {crowdfundingMode === 'token' && (
-                        <div>
-                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200"><span className="text-red-500 mr-1">*</span>Token Symbol</label>
-                          <input
-                            type="text"
-                            value={tokenSymbol}
-                            onChange={(e) => setTokenSymbol(e.target.value.toUpperCase())}
-                            placeholder="IDEA"
-                            maxLength={6}
-                            className="w-full rounded-md bg-white text-gray-900 placeholder-gray-400 border border-gray-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400/60 dark:bg-[#171a21] dark:text-gray-100 dark:placeholder-gray-500 dark:border-transparent dark:focus:ring-2 dark:focus:ring-indigo-500/30 dark:focus:border-indigo-400/60"
-                          />
-                        </div>
-                      )}
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">
-                          {crowdfundingMode === 'nft' ? 'Revenue Share %' : 
-                           crowdfundingMode === 'token' ? 'Token Allocation %' : 
-                           crowdfundingMode === 'dao' ? 'Governance Share %' : 'Discount %'}
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="50"
-                          value={revenueShare}
-                          onChange={(e) => setRevenueShare(e.target.value)}
-                          placeholder="10"
-                          className="w-full rounded-md bg-white text-gray-900 placeholder-gray-400 border border-gray-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400/60 dark:bg-[#171a21] dark:text-gray-100 dark:placeholder-gray-500 dark:border-transparent dark:focus:ring-2 dark:focus:ring-indigo-500/30 dark:focus:border-indigo-400/60"
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {crowdfundingMode === 'nft' ? '% of future revenue for supporters' : 
-                           crowdfundingMode === 'token' ? '% of tokens for crowdfunding' : 
-                           crowdfundingMode === 'dao' ? '% of governance rights' : '% discount for early supporters'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Creator Contact (Required for Crowdfunding)</label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Supporters need to contact you for project updates and collaboration</p>
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          value={twitter}
-                          onChange={(e) => setTwitter(e.target.value)}
-                          placeholder="Twitter/X handle (e.g., @username)"
-                          className="w-full rounded-md bg-white text-gray-900 placeholder-gray-400 border border-gray-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400/60 dark:bg-[#171a21] dark:text-gray-100 dark:placeholder-gray-500 dark:border-transparent dark:focus:ring-2 dark:focus:ring-indigo-500/30 dark:focus:border-indigo-400/60"
-                        />
-                        <input
-                          type="text"
-                          value={discord}
-                          onChange={(e) => setDiscord(e.target.value)}
-                          placeholder="Discord username (e.g., username#1234)"
-                          className="w-full rounded-md bg-white text-gray-900 placeholder-gray-400 border border-gray-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400/60 dark:bg-[#171a21] dark:text-gray-100 dark:placeholder-gray-500 dark:border-transparent dark:focus:ring-2 dark:focus:ring-indigo-500/30 dark:focus:border-indigo-400/60"
-                        />
-                        <input
-                          type="text"
-                          value={telegram}
-                          onChange={(e) => setTelegram(e.target.value)}
-                          placeholder="Telegram handle (e.g., @username)"
-                          className="w-full rounded-md bg-white text-gray-900 placeholder-gray-400 border border-gray-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400/60 dark:bg-[#171a21] dark:text-gray-100 dark:placeholder-gray-500 dark:border-transparent dark:focus:ring-2 dark:focus:ring-indigo-500/30 dark:focus:border-indigo-400/60"
-                        />
-                      </div>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        💡 <strong>Launch Parameters:</strong> After deployment, configure pricing, funding goals, and contact details in your idea's detail page (owner-only access).
+                      </p>
                     </div>
                   </div>
                 )}

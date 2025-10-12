@@ -10,7 +10,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilte
 
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: SqlitePool,
+    pub db: SqlitePool,
 }
 
 pub async fn init() -> anyhow::Result<(AppState, SocketAddr)> {
@@ -43,8 +43,11 @@ pub async fn init() -> anyhow::Result<(AppState, SocketAddr)> {
 
     // 执行数据库迁移
     db::migrate(&pool).await?;
+    
+    // 初始化数据库表和示例数据
+    crate::db_init::init_database(&pool).await?;
 
-    let state = AppState { pool };
+    let state = AppState { db: pool };
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     info!("initialized with addr=http://{}", addr);
     Ok((state, addr))
