@@ -181,14 +181,26 @@ export default function Header(): React.ReactElement {
                         alt="WaTouKuang Logo"
                         className="h-10 w-auto select-none transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
                     />
-                    <span
-                        className="text-xl md:text-2xl font-semibold tracking-tight leading-none select-none 
-                                   bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 
-                                   dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400
-                                   bg-clip-text text-transparent bg-[length:200%_100%] 
-                                   hover:animate-pulse transition-all duration-500 
-                                   group-hover:bg-[position:100%_0%]">
-                        HAVE AN IDEA
+                    <span className="flex items-center gap-1">
+                        <span
+                            className="text-xl md:text-2xl font-semibold tracking-tight leading-none select-none 
+                                       bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 
+                                       dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400
+                                       bg-clip-text text-transparent bg-[length:200%_100%] 
+                                       hover:animate-pulse transition-all duration-500 
+                                       group-hover:bg-[position:100%_0%]">
+                            HAVE AN IDEA
+                        </span>
+                        <span className="text-xl md:text-2xl font-semibold text-gray-400 dark:text-gray-500 flex items-center justify-center">·</span>
+                        <span
+                            className="text-xl md:text-2xl font-bold tracking-tight leading-none select-none 
+                                       bg-gradient-to-r from-emerald-500 to-cyan-500 
+                                       dark:from-emerald-400 dark:to-cyan-400
+                                       bg-clip-text text-transparent
+                                       hover:animate-pulse transition-all duration-500 
+                                       transform group-hover:scale-110 group-hover:rotate-1">
+                            ME
+                        </span>
                     </span>
                 </Link>
 

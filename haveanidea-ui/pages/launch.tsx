@@ -1,5 +1,6 @@
 import React from 'react';
 import Layout from '../components/Layout';
+import { submitIdea, type LaunchPayload } from '../api/launch';
 
 export default function Launch(): React.ReactElement {
   const [walletAddress, setWalletAddress] = React.useState('');
@@ -9,13 +10,11 @@ export default function Launch(): React.ReactElement {
   const [iconFile, setIconFile] = React.useState<File | null>(null);
   const [iconPreview, setIconPreview] = React.useState<string>('');
   const [enableCrowdfunding, setEnableCrowdfunding] = React.useState(false);
-  const [crowdfundingMode, setCrowdfundingMode] = React.useState('nft');
-  const [fundingPrice, setFundingPrice] = React.useState('');
-  const [revenueShare, setRevenueShare] = React.useState('10');
+  const [crowdfundingMode, setCrowdfundingMode] = React.useState<'nft' | 'token' | 'dao' | 'presale'>('nft');
   const [submitting, setSubmitting] = React.useState(false);
   const [message, setMessage] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [isConnected, setIsConnected] = React.useState(false);
+  
   
 
   const maxLen = 1000;
@@ -25,7 +24,6 @@ export default function Launch(): React.ReactElement {
       const saved = typeof window !== 'undefined' ? localStorage.getItem('walletAddress') : null;
       if (saved) {
         setWalletAddress(saved);
-        setIsConnected(true);
         setError(null);
       }
     } catch {}
@@ -33,7 +31,6 @@ export default function Launch(): React.ReactElement {
     const handler = (e: any) => {
       if (e?.detail?.address) {
         setWalletAddress(e.detail.address);
-        setIsConnected(true);
         setError(null);
       }
     };
@@ -49,7 +46,6 @@ export default function Launch(): React.ReactElement {
         const addr = accounts?.[0];
         if (addr) {
           setWalletAddress(addr);
-          setIsConnected(true);
           setError(null);
           try { localStorage.setItem('walletAddress', addr); } catch {}
         }
@@ -61,7 +57,6 @@ export default function Launch(): React.ReactElement {
     const onAccountsChanged = (accounts: string[]) => {
       const addr = accounts?.[0] || '';
       setWalletAddress(addr);
-      setIsConnected(!!addr);
       if (addr) setError(null);
       try {
         if (addr) localStorage.setItem('walletAddress', addr); else localStorage.removeItem('walletAddress');
@@ -104,7 +99,6 @@ export default function Launch(): React.ReactElement {
         });
         if (accounts.length > 0) {
           setWalletAddress(accounts[0]);
-          setIsConnected(true);
           setError(null);
           try {
             localStorage.setItem('walletAddress', accounts[0]);
@@ -153,26 +147,17 @@ export default function Launch(): React.ReactElement {
       setMessage('📝 Saving...');
       
       // 2. 准备提交数据（仅后端）
-      const blockchainData = {
+      const blockchainData: LaunchPayload = {
         title: ideaTitle,
         description: idea,
         iconHash,
         tags: tags.split(',').map(t => t.trim()).filter(t => t),
-        crowdfunding: enableCrowdfunding ? {
-          mode: crowdfundingMode,
-        } : null,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        ...(enableCrowdfunding && { crowdfundingMode })
       };
       
       // 3. 记录到后端（用于索引和搜索）
-      await fetch('/api/launch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...blockchainData,
-          iconHash
-        }),
-      });
+      await submitIdea(blockchainData);
       
       setMessage('✅ Idea submitted successfully!');
       
@@ -313,7 +298,7 @@ export default function Launch(): React.ReactElement {
                             name="crowdfundingMode"
                             value="nft"
                             checked={crowdfundingMode === 'nft'}
-                            onChange={(e) => setCrowdfundingMode(e.target.value)}
+                            onChange={(e) => setCrowdfundingMode(e.target.value as 'nft' | 'token' | 'dao' | 'presale')}
                             className="mr-3"
                           />
                           <div>
@@ -331,7 +316,7 @@ export default function Launch(): React.ReactElement {
                             name="crowdfundingMode"
                             value="token"
                             checked={crowdfundingMode === 'token'}
-                            onChange={(e) => setCrowdfundingMode(e.target.value)}
+                            onChange={(e) => setCrowdfundingMode(e.target.value as 'nft' | 'token' | 'dao' | 'presale')}
                             className="mr-3"
                           />
                           <div>
@@ -349,7 +334,7 @@ export default function Launch(): React.ReactElement {
                             name="crowdfundingMode"
                             value="dao"
                             checked={crowdfundingMode === 'dao'}
-                            onChange={(e) => setCrowdfundingMode(e.target.value)}
+                            onChange={(e) => setCrowdfundingMode(e.target.value as 'nft' | 'token' | 'dao' | 'presale')}
                             className="mr-3"
                           />
                           <div>
@@ -367,7 +352,7 @@ export default function Launch(): React.ReactElement {
                             name="crowdfundingMode"
                             value="presale"
                             checked={crowdfundingMode === 'presale'}
-                            onChange={(e) => setCrowdfundingMode(e.target.value)}
+                            onChange={(e) => setCrowdfundingMode(e.target.value as 'nft' | 'token' | 'dao' | 'presale')}
                             className="mr-3"
                           />
                           <div>
