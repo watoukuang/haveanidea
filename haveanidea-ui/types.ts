@@ -6,6 +6,26 @@ export interface Tag {
     href: string
 }
 
+// 后端API返回的原始数据结构
+export interface IdeaApiResponse {
+    id: number;
+    title?: string;
+    name?: string;
+    description?: string;
+    icon?: string;
+    icon_hash?: string;
+    bg_color?: string;
+    category?: string;
+    crowdfunding_mode?: string;
+    crowdfundingMode?: string;
+    chain?: 'eth' | 'sol' | 'bsc' | 'polygon';
+    tags?: string;
+    deployer?: string;
+    timestamp?: string;
+    created?: string;
+}
+
+// 前端使用的Tool接口
 export interface Tool {
     id: number;
     type?: string,

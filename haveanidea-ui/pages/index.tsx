@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import Layout from '../components/Layout';
-import CexsGrid from '../components/CexsGrid';
+import CexsGrid from '../components/IdeasGrid';
 import FilterDropdown from '../components/FilterDropdown';
 import {Tool} from '../types';
 import { api } from '../lib/api';
@@ -13,11 +13,40 @@ export default function Home(): React.ReactElement {
 
     useEffect(() => {
       let ignore = false;
-      api.getCexs()
-        .then((data) => { if (!ignore) setCexs(data || []); })
-        .catch(() => { if (!ignore) setCexs([]); });
+      // 调用后端API获取ideas数据
+      api.getCexs({
+        category: selectedCategory || undefined,
+        chain: selectedChain || undefined,
+        page: 1,
+        limit: 50
+      })
+        .then((data) => { 
+          if (!ignore) {
+            // 转换后端数据格式为前端期望的格式
+            const transformedData: Tool[] = (data || []).map(idea => ({
+              id: idea.id,
+              name: idea.title || idea.name || `Idea #${idea.id}`,
+              icon: idea.icon_hash || idea.icon || '💡',
+              bg_color: idea.bg_color || '#f3f4f6',
+              messages: [{
+                title: idea.description || 'No description available',
+                created: parseInt(idea.timestamp || idea.created || '0') || Date.now(),
+                href: `/ideas/${idea.id}`
+              }],
+              category: idea.category || 'Free Ideas',
+              type: idea.crowdfunding_mode || idea.crowdfundingMode || 'free',
+              chain: idea.chain,
+              deployer: idea.deployer
+            }));
+            setCexs(transformedData);
+          }
+        })
+        .catch((error) => { 
+          console.error('Failed to fetch ideas:', error);
+          if (!ignore) setCexs([]); 
+        });
       return () => { ignore = true; };
-    }, []);
+    }, [selectedCategory, selectedChain]);
 
     // Extract unique categories and types from cexs data
 //     const categories = [...new Set(cexs.map((tool: Tool) => tool.category))];

@@ -1,6 +1,6 @@
-import { Tool, KolItem, TwitterItem } from '../types';
+import { Tool, IdeaApiResponse, KolItem, TwitterItem } from '../types';
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8181';
+const BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080';
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === '1';
 
 // 获取存储的 JWT token
@@ -156,7 +156,7 @@ export const api = {
     idea_type?: string; 
     page?: number; 
     limit?: number; 
-  }): Promise<Tool[]> {
+  }): Promise<IdeaApiResponse[]> {
     if (USE_MOCK) return mockCexs;
     try { 
       const searchParams = new URLSearchParams();

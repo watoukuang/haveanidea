@@ -6,9 +6,8 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::models::{
-    ApiResponse, Idea, IdeaResponse,
+    ApiResponse, Idea,
 };
-use crate::models::idea::{IdeaMessage};
 use crate::app::AppState;
 
 #[derive(Deserialize)]
@@ -23,12 +22,20 @@ pub struct IdeaQuery {
 pub async fn get_ideas(
     State(state): State<AppState>,
     Query(params): Query<IdeaQuery>,
-) -> Result<Json<ApiResponse<Vec<IdeaResponse>>>, StatusCode> {
+) -> Result<Json<ApiResponse<Vec<Idea>>>, StatusCode> {
     let page = params.page.unwrap_or(1);
     let limit = params.limit.unwrap_or(20).min(100); // 最大100条
     let offset = (page - 1) * limit;
 
-    let mut query = "SELECT id, name, description as icon, icon, bg_color, category, idea_type, chain, tags, messages, deployer, launch, creator_id, created_at, updated_at FROM ideas WHERE 1=1".to_string();
+    let mut query = "SELECT \
+            id, \
+            name AS title, \
+            description, \
+            icon AS icon_hash, \
+            tags, \
+            strftime('%s', created_at) AS timestamp, \
+            idea_type AS crowdfundingMode \
+        FROM ideas WHERE 1=1".to_string();
     let mut bind_params = Vec::new();
 
     if let Some(category) = &params.category {
@@ -55,16 +62,14 @@ pub async fn get_ideas(
         query_builder = query_builder.bind(param);
     }
 
-    let ideas = query_builder
+    let ideas: Vec<Idea> = query_builder
         .fetch_all(&state.db)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    let responses: Vec<IdeaResponse> = ideas.into_iter().map(|idea| idea.into()).collect();
-
     Ok(Json(ApiResponse {
         success: true,
-        data: Some(responses),
+        data: Some(ideas),
         message: None,
     }))
 }
@@ -72,9 +77,17 @@ pub async fn get_ideas(
 pub async fn get_idea_by_id(
     State(state): State<AppState>,
     Path(id): Path<i64>,
-) -> Result<Json<ApiResponse<IdeaResponse>>, StatusCode> {
-    let idea = sqlx::query_as::<_, Idea>(
-        "SELECT id, name, description as icon, icon, bg_color, category, idea_type, chain, tags, messages, deployer, launch, creator_id, created_at, updated_at FROM ideas WHERE id = ?1"
+) -> Result<Json<ApiResponse<Idea>>, StatusCode> {
+    let idea: Idea = sqlx::query_as::<_, Idea>(
+        "SELECT \
+            id, \
+            name AS title, \
+            description, \
+            icon AS icon_hash, \
+            tags, \
+            strftime('%s', created_at) AS timestamp, \
+            idea_type AS crowdfundingMode \
+        FROM ideas WHERE id = ?1"
     )
         .bind(id)
         .fetch_one(&state.db)
@@ -83,7 +96,7 @@ pub async fn get_idea_by_id(
 
     Ok(Json(ApiResponse {
         success: true,
-        data: Some(idea.into()),
+        data: Some(idea),
         message: None,
     }))
 }
@@ -105,53 +118,32 @@ pub struct LaunchRequest {
 pub async fn launch(
     State(state): State<AppState>,
     Json(req): Json<LaunchRequest>,
-) -> Result<Json<ApiResponse<IdeaResponse>>, StatusCode> {
-
-    // Prepare fields
-    let messages = vec![IdeaMessage {
-        title: req.title.clone(),
-        created: req.timestamp,
-        href: String::new(),
-    }];
-    let messages_json = serde_json::to_string(&messages)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
+) -> Result<Json<ApiResponse<()>>, StatusCode> {
     let tags_json: Option<String> = req
         .tags
         .map(|t| serde_json::to_string(&t).unwrap_or_else(|_| "[]".to_string()));
 
     let idea_type = req.crowdfunding_mode.clone();
 
-    // Insert idea with only the fields mapped from frontend
+    // Insert idea using only frontend-provided fields (Plan C: no messages)
     sqlx::query(
         r#"
-        INSERT INTO ideas (name, description, icon, idea_type, tags, messages)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+        INSERT INTO ideas (name, description, icon, idea_type, tags)
+        VALUES (?1, ?2, ?3, ?4, ?5)
         "#,
     )
-    .bind(&req.title)
-    .bind(&req.description)
-    .bind(&req.icon_hash)
-    .bind(&idea_type)
-    .bind(&tags_json)
-    .bind(&messages_json)
-    .execute(&state.db)
-    .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    let new_id: i64 = sqlx::query_scalar("SELECT last_insert_rowid()")
-        .fetch_one(&state.db)
+        .bind(&req.title)
+        .bind(&req.description)
+        .bind(&req.icon_hash)
+        .bind(&idea_type)
+        .bind(&tags_json)
+        .execute(&state.db)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    // Fetch the created row using the same column projection used by list/detail
-    let idea = sqlx::query_as::<_, Idea>(
-        "SELECT id, name, description as icon, icon, bg_color, category, idea_type, chain, tags, messages, deployer, launch, creator_id, created_at, updated_at FROM ideas WHERE id = ?1",
-    )
-    .bind(new_id)
-    .fetch_one(&state.db)
-    .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    Ok(Json(ApiResponse::ok(idea.into())))
+    Ok(Json(ApiResponse {
+        success: true,
+        data: None,
+        message: Some("Idea submitted successfully".to_string()),
+    }))
 }
