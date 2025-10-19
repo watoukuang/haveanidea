@@ -2,14 +2,16 @@ import React from 'react';
 import Link from 'next/link';
 import { Tool } from '../types';
 
-interface CexCardProps {
-  cex: Tool;
+interface IdeaCardProps {
+  idea: Tool;
 }
 
-export default function IdeaCard({ cex }: CexCardProps): React.ReactElement {
+export default function IdeaCard({ idea }: IdeaCardProps): React.ReactElement {
   const formatTimeAgo = (timestamp: number) => {
+    // tolerate both seconds and milliseconds
+    const tsMs = timestamp > 1e12 ? timestamp : timestamp * 1000;
     const now = Date.now();
-    const diff = now - timestamp;
+    const diff = now - tsMs;
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -38,11 +40,11 @@ export default function IdeaCard({ cex }: CexCardProps): React.ReactElement {
     }
   };
 
-  const latestMessage = cex.messages?.[0];
-  const badge = getCategoryBadge(cex.category);
+  const latestMessage = idea.messages?.[0];
+  const badge = getCategoryBadge(idea.category);
 
   return (
-    <Link href={`/ideas/${cex.id}`}>
+    <Link href={`/ideas/${idea.id}`}>
       <div className="group relative bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 
                       hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 
                       hover:shadow-lg dark:hover:shadow-2xl hover:-translate-y-1 cursor-pointer overflow-hidden">
@@ -52,16 +54,16 @@ export default function IdeaCard({ cex }: CexCardProps): React.ReactElement {
           <div className="flex items-start justify-between mb-3">
             <div 
               className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-sm"
-              style={{ backgroundColor: cex.bg_color || '#f3f4f6' }}
+              style={{ backgroundColor: idea.bg_color || '#f3f4f6' }}
             >
-              {cex.icon}
+              {idea.icon}
             </div>
             
             <div className="flex items-center gap-2">
               {/* 链标识 */}
-              {cex.chain && (
-                <span className="text-lg" title={cex.chain}>
-                  {getChainIcon(cex.chain)}
+              {idea.chain && (
+                <span className="text-lg" title={idea.chain}>
+                  {getChainIcon(idea.chain)}
                 </span>
               )}
               
@@ -74,7 +76,7 @@ export default function IdeaCard({ cex }: CexCardProps): React.ReactElement {
 
           {/* 标题 */}
           <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-            {cex.name}
+            {idea.name}
           </h3>
 
           {/* 描述 */}
@@ -94,25 +96,25 @@ export default function IdeaCard({ cex }: CexCardProps): React.ReactElement {
             )}
             
             {/* 部署者地址 */}
-            {cex.deployer && (
+            {idea.deployer && (
               <span className="font-mono">
-                {cex.deployer.slice(0, 6)}...{cex.deployer.slice(-4)}
+                {idea.deployer.slice(0, 6)}...{idea.deployer.slice(-4)}
               </span>
             )}
           </div>
 
           {/* 众筹信息 */}
-          {cex.launch && (
+          {idea.launch && (
             <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
               <div className="flex items-center justify-between text-xs">
-                {cex.launch.priceEth && (
+                {idea.launch.priceEth && (
                   <span className="text-green-600 dark:text-green-400 font-medium">
-                    {cex.launch.priceEth} ETH
+                    {idea.launch.priceEth} ETH
                   </span>
                 )}
-                {cex.launch.fundingGoalEth && (
+                {idea.launch.fundingGoalEth && (
                   <span className="text-gray-500 dark:text-gray-400">
-                    Goal: {cex.launch.fundingGoalEth} ETH
+                    Goal: {idea.launch.fundingGoalEth} ETH
                   </span>
                 )}
               </div>

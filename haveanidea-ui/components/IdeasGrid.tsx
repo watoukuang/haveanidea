@@ -2,36 +2,27 @@ import React from 'react';
 import { Tool } from '../types';
 import IdeaCard from './IdeaCard';
 
-interface CexsGridProps {
+interface IdeasGridProps {
   tools: Tool[];
   selectedCategory: string;
   selectedType: string;
   selectedChain?: 'eth' | 'sol' | 'bsc' | 'polygon' | '';
 }
 
-export default function CexsGrid({ 
-  tools, 
-  selectedCategory, 
-  selectedType, 
-  selectedChain 
-}: CexsGridProps): React.ReactElement {
+export default function IdeasGrid({
+  tools,
+  selectedCategory,
+  selectedType,
+  selectedChain,
+}: IdeasGridProps): React.ReactElement {
   // 过滤逻辑
   const filteredTools = tools.filter((tool) => {
     // 分类过滤
-    if (selectedCategory && selectedCategory !== 'all' && tool.category !== selectedCategory) {
-      return false;
-    }
-    
+    if (selectedCategory && selectedCategory !== 'all' && tool.category !== selectedCategory) return false;
     // 类型过滤
-    if (selectedType && selectedType !== 'all' && tool.type !== selectedType) {
-      return false;
-    }
-    
-    // 链过滤
-    if (selectedChain && selectedChain !== '' && tool.chain !== selectedChain) {
-      return false;
-    }
-    
+    if (selectedType && selectedType !== 'all' && tool.type !== selectedType) return false;
+    // 链过滤（空字符串会被视为未选择）
+    if (selectedChain && tool.chain !== selectedChain) return false;
     return true;
   });
 
@@ -57,7 +48,7 @@ export default function CexsGrid({
           className="animate-in slide-in-from-bottom duration-500"
           style={{ animationDelay: `${index * 100}ms` }}
         >
-          <IdeaCard cex={tool} />
+          <IdeaCard idea={tool} />
         </div>
       ))}
     </div>

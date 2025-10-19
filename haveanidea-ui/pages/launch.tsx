@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout from '../components/Layout';
-import { submitIdea, type LaunchPayload } from '../api/launch';
+import { submitIdea, type LaunchPayload } from '../api/idea';
 
 export default function Launch(): React.ReactElement {
   const [walletAddress, setWalletAddress] = React.useState('');
