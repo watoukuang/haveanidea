@@ -3,11 +3,12 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::models::{
     ApiResponse, Idea, IdeaResponse,
 };
+use crate::models::idea::{IdeaMessage};
 use crate::app::AppState;
 
 #[derive(Deserialize)]
@@ -88,3 +89,69 @@ pub async fn get_idea_by_id(
 }
 
 // All auth-required functions removed since auth module was deleted
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct LaunchRequest {
+    pub title: String,
+    pub description: String,
+    #[serde(rename = "iconHash")]
+    pub icon_hash: String,
+    pub tags: Option<Vec<String>>,
+    pub timestamp: i64,
+    #[serde(rename = "crowdfundingMode")]
+    pub crowdfunding_mode: Option<String>,
+}
+
+pub async fn launch(
+    State(state): State<AppState>,
+    Json(req): Json<LaunchRequest>,
+) -> Result<Json<ApiResponse<IdeaResponse>>, StatusCode> {
+
+    // Prepare fields
+    let messages = vec![IdeaMessage {
+        title: req.title.clone(),
+        created: req.timestamp,
+        href: String::new(),
+    }];
+    let messages_json = serde_json::to_string(&messages)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let tags_json: Option<String> = req
+        .tags
+        .map(|t| serde_json::to_string(&t).unwrap_or_else(|_| "[]".to_string()));
+
+    let idea_type = req.crowdfunding_mode.clone();
+
+    // Insert idea with only the fields mapped from frontend
+    sqlx::query(
+        r#"
+        INSERT INTO ideas (name, description, icon, idea_type, tags, messages)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+        "#,
+    )
+    .bind(&req.title)
+    .bind(&req.description)
+    .bind(&req.icon_hash)
+    .bind(&idea_type)
+    .bind(&tags_json)
+    .bind(&messages_json)
+    .execute(&state.db)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let new_id: i64 = sqlx::query_scalar("SELECT last_insert_rowid()")
+        .fetch_one(&state.db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Fetch the created row using the same column projection used by list/detail
+    let idea = sqlx::query_as::<_, Idea>(
+        "SELECT id, name, description as icon, icon, bg_color, category, idea_type, chain, tags, messages, deployer, launch, creator_id, created_at, updated_at FROM ideas WHERE id = ?1",
+    )
+    .bind(new_id)
+    .fetch_one(&state.db)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(ApiResponse::ok(idea.into())))
+}

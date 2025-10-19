@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use crate::service::{health, ideas};
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::Router;
 
 
@@ -18,5 +18,7 @@ fn ideas_router() -> Router<AppState> {
     Router::new()
         .route("/ideas", get(ideas::get_ideas))
         .route("/ideas/:id", get(ideas::get_idea_by_id))
+        .route("/api/launch", post(ideas::launch))
+        
 }
 
