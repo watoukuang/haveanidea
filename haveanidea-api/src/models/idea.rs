@@ -143,7 +143,7 @@ impl From<Idea> for IdeaResponse {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuthClaims {
     pub sub: String, // wallet_address
     pub exp: usize,

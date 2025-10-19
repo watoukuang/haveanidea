@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 
-use crate::db;
 use axum::Router;
 use dotenvy::dotenv;
 use sqlx::sqlite::SqlitePoolOptions;
@@ -23,29 +22,17 @@ pub async fn init() -> anyhow::Result<(AppState, SocketAddr)> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    // 读取基础配置（数据库地址、端口）
-    // 本地开发
     let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite://watoukuang.db?mode=rw".to_string());
-    // 服务器
-    // let database_url = std::env::var("DATABASE_URL")
-    //     .unwrap_or_else(|_| "sqlite:///app/data/watoukuang.db?mode=rw".to_string());
+        .unwrap_or_else(|_| "sqlite://haveanidea.db?mode=rw".to_string());
     let port: u16 = std::env::var("PORT")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(8181);
-
-    // 建立数据库连接池
+    // // 建立数据库连接池
     let pool: SqlitePool = SqlitePoolOptions::new()
         .max_connections(5)
         .connect(&database_url)
         .await?;
-
-    // 执行数据库迁移
-    db::migrate(&pool).await?;
-    
-    // 初始化数据库表和示例数据
-    crate::db_init::init_database(&pool).await?;
 
     let state = AppState { db: pool };
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -60,7 +47,7 @@ pub fn new() -> Router<AppState> {
 }
 
 // 启动 HTTP 服务（内部挂载全局 State）
-pub async fn start(addr: SocketAddr, state: AppState) -> anyhow::Result<()> {
+pub async fn run(addr: SocketAddr, state: AppState) -> anyhow::Result<()> {
     let app = new().with_state(state);
     info!("starting server on http://{}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await?;
