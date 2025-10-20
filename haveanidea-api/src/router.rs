@@ -16,9 +16,8 @@ fn health_router() -> Router<AppState> {
 
 fn ideas_router() -> Router<AppState> {
     Router::new()
-        .route("/ideas", get(ideas::get_ideas))
+        .route("/ideas/page", get(ideas::page_ideas))
         .route("/ideas/:id", get(ideas::get_idea_by_id))
         .route("/api/launch", post(ideas::launch))
-        
 }
 

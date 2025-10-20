@@ -8,7 +8,7 @@ export default function Home(): React.ReactElement {
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string>('');
     const [ideas, setIdeas] = useState<Tool[]>([]);
-    const [selectedChain, setSelectedChain] = useState<'eth' | 'sol' | 'bsc' | 'polygon' | ''>('eth');
+    const [selectedChain, setSelectedChain] = useState<'eth' | 'sol' | 'bsc' | 'polygon' | ''>('');
 
     useEffect(() => {
         let ignore = false;
@@ -17,6 +17,7 @@ export default function Home(): React.ReactElement {
                 const list = await getIdeas({
                     category: selectedCategory || undefined,
                     chain: selectedChain || undefined,
+                    idea_type: selectedType || undefined,
                     page: 1,
                     limit: 50,
                 });
@@ -27,8 +28,10 @@ export default function Home(): React.ReactElement {
             }
         };
         load();
-        return () => { ignore = true; };
-    }, [selectedCategory, selectedChain]);
+        return () => {
+            ignore = true;
+        };
+    }, [selectedCategory, selectedChain, selectedType]);
 
     return (
         <Layout>
@@ -84,44 +87,47 @@ export default function Home(): React.ReactElement {
                             setSelectedType('');
                         }}
                         className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 
-                        ${selectedCategory === ''
+                        ${(selectedType === '' && selectedCategory === '')
                             ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
                             : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800 backdrop-blur-sm'}`}
                     >
                         All
                     </button>
                     <button
-                        onClick={() => {
-                            setSelectedCategory('nft');
-                        }}
+                        onClick={() => { setSelectedType('nft'); }}
                         className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 backdrop-blur-sm 
-                        ${selectedCategory === 'nft'
+                        ${selectedType === 'nft'
                             ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
                             : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'}`}
                     >
                         💎 NFT Ideas
                     </button>
                     <button
-                        onClick={() => {
-                            setSelectedCategory('free');
-                        }}
+                        onClick={() => { setSelectedType('token'); }}
                         className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 backdrop-blur-sm 
-                        ${selectedCategory === 'free'
+                        ${selectedType === 'token'
                             ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
                             : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'}`}
                     >
-                        🆓 Free Ideas
+                        🪙 Token Ideas
                     </button>
                     <button
-                        onClick={() => {
-                            setSelectedCategory('trending');
-                        }}
+                        onClick={() => { setSelectedType('dao'); }}
                         className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 backdrop-blur-sm 
-                        ${selectedCategory === 'trending'
+                        ${selectedType === 'dao'
                             ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
                             : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'}`}
                     >
-                        🔥 Trending
+                        🏛️ DAO Ideas
+                    </button>
+                    <button
+                        onClick={() => { setSelectedType('presale'); }}
+                        className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 transform hover:scale-105 backdrop-blur-sm 
+                        ${selectedType === 'presale'
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
+                            : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'}`}
+                    >
+                        🎯 Presale Ideas
                     </button>
                 </div>
 

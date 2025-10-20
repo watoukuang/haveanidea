@@ -1,6 +1,6 @@
 import { Tool, IdeaApiResponse, KolItem, TwitterItem } from '../types';
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080';
+const BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8181';
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === '1';
 
 // 获取存储的 JWT token
@@ -157,7 +157,6 @@ export const api = {
     page?: number; 
     limit?: number; 
   }): Promise<IdeaApiResponse[]> {
-    if (USE_MOCK) return mockCexs;
     try { 
       const searchParams = new URLSearchParams();
       if (params?.category) searchParams.set('category', params.category);
@@ -167,9 +166,9 @@ export const api = {
       if (params?.limit) searchParams.set('limit', params.limit.toString());
       
       const query = searchParams.toString();
-      return await getJson<Tool[]>(`/ideas${query ? '?' + query : ''}`); 
-    } catch { 
-      return mockCexs; 
+      return await getJson<IdeaApiResponse[]>(`/ideas${query ? '?' + query : ''}`); 
+    } catch (err) { 
+      throw err; 
     }
   },
 

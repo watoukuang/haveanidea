@@ -5,10 +5,10 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::app::AppState;
 use crate::models::{
     ApiResponse, Idea,
 };
-use crate::app::AppState;
 
 #[derive(Deserialize)]
 pub struct IdeaQuery {
@@ -19,7 +19,7 @@ pub struct IdeaQuery {
     pub limit: Option<u32>,
 }
 
-pub async fn get_ideas(
+pub async fn page_ideas(
     State(state): State<AppState>,
     Query(params): Query<IdeaQuery>,
 ) -> Result<Json<ApiResponse<Vec<Idea>>>, StatusCode> {
@@ -33,8 +33,10 @@ pub async fn get_ideas(
             description, \
             icon AS icon_hash, \
             tags, \
-            strftime('%s', created_at) AS timestamp, \
-            idea_type AS crowdfundingMode \
+            chain, \
+            deployer, \
+            strftime('%s', created_at) AS created, \
+            idea_type AS crowdfunding_mode \
         FROM ideas WHERE 1=1".to_string();
     let mut bind_params = Vec::new();
 
@@ -85,8 +87,10 @@ pub async fn get_idea_by_id(
             description, \
             icon AS icon_hash, \
             tags, \
-            strftime('%s', created_at) AS timestamp, \
-            idea_type AS crowdfundingMode \
+            chain, \
+            deployer, \
+            strftime('%s', created_at) AS created, \
+            idea_type AS crowdfunding_mode \
         FROM ideas WHERE id = ?1"
     )
         .bind(id)
@@ -113,34 +117,30 @@ pub struct LaunchRequest {
     pub timestamp: i64,
     #[serde(rename = "crowdfundingMode")]
     pub crowdfunding_mode: Option<String>,
+    pub chain: Option<String>,
+    pub deployer: Option<String>,
 }
 
 pub async fn launch(
     State(state): State<AppState>,
     Json(req): Json<LaunchRequest>,
 ) -> Result<Json<ApiResponse<()>>, StatusCode> {
-    let tags_json: Option<String> = req
-        .tags
-        .map(|t| serde_json::to_string(&t).unwrap_or_else(|_| "[]".to_string()));
+    let tags_json: Option<String> = req.tags.map(|t| serde_json::to_string(&t).unwrap_or_else(|_| "[]".to_string()));
 
     let idea_type = req.crowdfunding_mode.clone();
-
-    // Insert idea using only frontend-provided fields (Plan C: no messages)
-    sqlx::query(
-        r#"
-        INSERT INTO ideas (name, description, icon, idea_type, tags)
-        VALUES (?1, ?2, ?3, ?4, ?5)
-        "#,
-    )
-        .bind(&req.title)
+    sqlx::query(r#"
+        INSERT INTO ideas (title, description, icon, idea_type, tags, chain, deployer)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"#,
+    ).bind(&req.title)
         .bind(&req.description)
         .bind(&req.icon_hash)
         .bind(&idea_type)
         .bind(&tags_json)
+        .bind(&req.chain)
+        .bind(&req.deployer)
         .execute(&state.db)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
     Ok(Json(ApiResponse {
         success: true,
         data: None,
